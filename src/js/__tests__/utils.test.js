@@ -1,4 +1,4 @@
-import { calcTileType } from '../utils';
+import { calcTileType, randomizeArray, getStartPosition } from '../utils';
 
 test.each([
   [0, 8, 'top-left'],
@@ -34,3 +34,38 @@ test.each([
     expect(calcTileType(index, fieldSize)).toBe(name);
   },
 );
+
+test('RandomizeArray should not break array', () => {
+  const expected = [1, 2, 3, 4];
+  const recived = randomizeArray([4, 3, 2, 1]).sort();
+
+  expect(recived).toEqual(expected);
+});
+
+test('getStartPosition should return correct start position for 8*8 field for gamer', () => {
+  const expected = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57];
+  const recived = getStartPosition(8, 'gamer').sort((a, b) => a - b);
+  expect(recived).toEqual(expected);
+});
+
+test('getStartPosition should return correct start position for 8*8 field for computer', () => {
+  const expected = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 62, 63];
+  const recived = getStartPosition(8, 'computer').sort((a, b) => a - b);
+  expect(recived).toEqual(expected);
+});
+
+test('getStartPosition should throw error if fieldSize < 4', () => {
+  expect(() => getStartPosition(2, 'gamer')).toThrow('Fieldsize should be grater or equal 4');
+});
+
+test('getStartPosition should throw error if fieldSize < 4', () => {
+  expect(() => getStartPosition(3, 'gamer')).toThrow('Fieldsize should be grater or equal 4');
+});
+
+test('getStartPosition should not throw error if fieldSize >= 4', () => {
+  expect(() => getStartPosition(4, 'gamer')).not.toThrow('Fieldsize should be grater or equal 4');
+});
+
+test('getStartPosition should throw error if fieldSize >= 4', () => {
+  expect(() => getStartPosition(5, 'gamer')).not.toThrow('Fieldsize should be grater or equal 4');
+});
