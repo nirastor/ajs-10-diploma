@@ -1,6 +1,10 @@
+/* eslint-disable consistent-return */
+/* eslint-disable no-console */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable no-unused-vars */
 import { characterGenerator } from './generators';
+import PositionedCharacter from './PositionedCharacter';
+import { randomizeArray, getStartPosition } from './utils';
 import {
   Bowman,
   Swordsman,
@@ -14,14 +18,20 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    this.field = [];
   }
 
   init() {
-    // TODO: add event listeners to gamePlay events
-    // TODO: load saved stated from stateService
     this.gamePlay.drawUi('prairie');
-    const pers = characterGenerator([Bowman, Swordsman, Magician], 1);
-    console.log(pers);
+
+    // TODO: load saved stated from stateService
+
+    // Event listeners to gamePlay events
+    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+    this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
+
+    // tmp move to newGame
   }
 
   onCellClick(index) {
@@ -29,10 +39,30 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    // TODO: react to mouse enter
+    const findPers = this.field.find((item) => item.position === index);
+    if (findPers) {
+      const pers = findPers.character;
+      const message = `🎖${pers.level} ⚔${pers.attack} 🛡${pers.defence} ❤${pers.health}`;
+      this.gamePlay.showCellTooltip(message, index);
+    }
   }
 
   onCellLeave(index) {
-    // TODO: react to mouse leave
+    // Strange but hideCellTooltip work without onCellLeave
+  }
+
+  onNewGameClick() {
+    const gamerPositions = randomizeArray(getStartPosition(this.gamePlay.boardSize, 'gamer'));
+    const computerPositions = randomizeArray(getStartPosition(this.gamePlay.boardSize, 'computer'));
+
+    for (let i = 0; i < 2; i += 1) {
+      const gamerPers = characterGenerator([Bowman, Swordsman, Magician], 1);
+      this.field.push(new PositionedCharacter(gamerPers, gamerPositions[i]));
+
+      const computerPers = characterGenerator([Vampire, Undead, Daemon], 1);
+      this.field.push(new PositionedCharacter(computerPers, computerPositions[i]));
+    }
+
+    this.gamePlay.redrawPositions(this.field);
   }
 }
