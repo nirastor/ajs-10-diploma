@@ -1,4 +1,13 @@
-import { calcTileType, randomizeArray, getStartPosition } from '../utils';
+import {
+  calcTileType,
+  randomizeArray,
+  getStartPosition,
+  getDistance,
+} from '../utils';
+
+/*
+// calcTileType
+*/
 
 test.each([
   [0, 8, 'top-left'],
@@ -35,12 +44,20 @@ test.each([
   },
 );
 
+/*
+// RandomizeArray
+*/
+
 test('RandomizeArray should not break array', () => {
   const expected = [1, 2, 3, 4];
   const recived = randomizeArray([4, 3, 2, 1]).sort();
 
   expect(recived).toEqual(expected);
 });
+
+/*
+// getStartPosition
+*/
 
 test('getStartPosition should return correct start position for 8*8 field for gamer', () => {
   const expected = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57];
@@ -68,4 +85,95 @@ test('getStartPosition should not throw error if fieldSize >= 4', () => {
 
 test('getStartPosition should throw error if fieldSize >= 4', () => {
   expect(() => getStartPosition(5, 'gamer')).not.toThrow('Fieldsize should be grater or equal 4');
+});
+
+/*
+// getDistance
+*/
+
+test.each([
+  [8, 0, 1],
+  [8, 0, 2],
+  [8, 0, 3],
+  [8, 0, 7],
+  [8, 16, 22],
+  [8, 56, 57],
+  [8, 56, 60],
+  [8, 56, 63],
+])('should return inline: true for cells in a row', (fz, el1, el2) => {
+  expect(getDistance(fz, el1, el2).inLine).toBe(true);
+});
+
+test.each([
+  [8, 0, 10],
+  [8, 0, 11],
+  [8, 0, 15],
+  [8, 16, 26],
+  [8, 16, 31],
+  [8, 56, 50],
+  [8, 56, 53],
+  [8, 56, 55],
+])('should return inline: false for cells not in row', (fz, el1, el2) => {
+  expect(getDistance(fz, el1, el2).inLine).toBe(false);
+});
+
+test.each([
+  [8, 0, 8],
+  [8, 0, 16],
+  [8, 0, 56],
+  [8, 0, 32],
+  [8, 1, 9],
+  [8, 7, 15],
+  [8, 7, 23],
+  [8, 7, 63],
+])('should return inline: true for cells in a col', (fz, el1, el2) => {
+  expect(getDistance(fz, el1, el2).inLine).toBe(true);
+});
+
+test.each([
+  [8, 0, 17],
+  [8, 0, 33],
+  [8, 0, 57],
+  [8, 1, 18],
+  [8, 1, 50],
+  [8, 7, 22],
+  [8, 7, 61],
+])('should return inline: false for cells not in col', (fz, el1, el2) => {
+  expect(getDistance(fz, el1, el2).inLine).toBe(false);
+});
+
+test.each([
+  [8, 0, 9],
+  [8, 0, 18],
+  [8, 0, 63],
+  [8, 1, 8],
+  [8, 1, 10],
+  [8, 1, 46],
+  [8, 35, 26],
+  [8, 35, 28],
+  [8, 35, 42],
+  [8, 35, 8],
+  [8, 35, 62],
+  [8, 35, 56],
+  [8, 35, 7],
+])('should return inline: true for any diagonal lines', (fz, el1, el2) => {
+  expect(getDistance(fz, el1, el2).inLine).toBe(true);
+});
+
+test.each([
+  [8, 0, 1, 1],
+  [8, 0, 2, 2],
+  [8, 0, 7, 7],
+  [8, 9, 3, 2],
+  [8, 9, 12, 3],
+  [8, 9, 19, 2],
+  [8, 35, 0, 4],
+  [8, 35, 3, 4],
+  [8, 35, 7, 4],
+  [8, 35, 63, 4],
+  [8, 35, 36, 1],
+  [8, 35, 42, 1],
+  [8, 35, 40, 3],
+])('should count correct distance', (fz, el1, el2, result) => {
+  expect(getDistance(fz, el1, el2).distance).toBe(result);
 });

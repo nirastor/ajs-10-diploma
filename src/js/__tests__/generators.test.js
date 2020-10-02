@@ -28,6 +28,8 @@ test('should create Bowman (lvl 1)', () => {
   expect(received.health).toBe(100);
   expect(received.level).toBe(1);
   expect(received.type).toBe('bowman');
+  expect(received.moveRange).toBe(2);
+  expect(received.attackRange).toBe(10);
 });
 
 test('should create Swordsman', () => {
@@ -38,6 +40,8 @@ test('should create Swordsman', () => {
   expect(received.health).toBe(100);
   expect(received.level).toBe(1);
   expect(received.type).toBe('swordsman');
+  expect(received.moveRange).toBe(4);
+  expect(received.attackRange).toBe(1);
 });
 
 test('should create Magician', () => {
@@ -48,6 +52,8 @@ test('should create Magician', () => {
   expect(received.health).toBe(100);
   expect(received.level).toBe(1);
   expect(received.type).toBe('magician');
+  expect(received.moveRange).toBe(1);
+  expect(received.attackRange).toBe(4);
 });
 
 test('should create Vampire', () => {
@@ -58,7 +64,10 @@ test('should create Vampire', () => {
   expect(received.health).toBe(100);
   expect(received.level).toBe(1);
   expect(received.type).toBe('vampire');
+  expect(received.moveRange).toBe(2);
+  expect(received.attackRange).toBe(2);
 });
+
 test('should create Undead', () => {
   const received = characterGenerator([Undead], 1);
 
@@ -67,6 +76,8 @@ test('should create Undead', () => {
   expect(received.health).toBe(100);
   expect(received.level).toBe(1);
   expect(received.type).toBe('undead');
+  expect(received.moveRange).toBe(4);
+  expect(received.attackRange).toBe(1);
 });
 
 test('should create Daemon', () => {
@@ -77,6 +88,8 @@ test('should create Daemon', () => {
   expect(received.health).toBe(100);
   expect(received.level).toBe(1);
   expect(received.type).toBe('daemon');
+  expect(received.moveRange).toBe(1);
+  expect(received.attackRange).toBe(4);
 });
 
 test('should create daemon less or equal 10 lvl', () => {
