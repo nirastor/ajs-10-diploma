@@ -39,81 +39,94 @@ export default class GameController {
   }
 
   onCellClick(index) {
-    const findedPers = this.gameState.field.find((item) => item.position === index);
-    if (!findedPers || this.gameState.activePlayer === 'computer') {
+    if (this.gameState.activePlayer === 'computer') {
       return false;
     }
 
-    const constructorName = Object.getPrototypeOf(findedPers.character).constructor;
-    if (!this.GAMER_CLASSES.includes(constructorName)) {
+    // try to refacor here to switch
+    if (this.gameState.avlAction === 'select') {
+      this.actionSelect(index);
+    } else if (this.gameState.avlAction === 'move') {
+      this.actionMove(index);
+    } else if (this.gameState.avlAction === 'attack') {
+      this.actionAttack(index);
+    } else if (this.gameState.avlAction === 'not allowed to choose') {
       GamePlay.showError('Выбрать можно только своих');
-      return false;
-    }
-
-    // if everything is ok, do select action
-    // переделать через класс спозиционированный герой
-    const selectedPosition = this.gameState.selected ? this.gameState.selected.position : null;
-    if (selectedPosition === index) {
-      this.gamePlay.deselectCell(index);
-      this.gameState.selected = null;
-    } else if (selectedPosition === null) {
-      this.gamePlay.selectCell(index);
-      this.gameState.selected = findedPers;
-    } else {
-      this.gamePlay.deselectCell(selectedPosition);
-      this.gamePlay.selectCell(index);
-      this.gameState.selected = findedPers;
+    } else if (this.gameState.avlAction === 'to far to attack') {
+      GamePlay.showError('Слишком далеко для атаки');
+    } else if (this.gameState.avlAction === 'to far to move') {
+      GamePlay.showError('Слишком далеко для перемещения');
     }
   }
 
   onCellEnter(index) {
-    const isPersOnCell = this.gameState.field.find((item) => item.position === index);
+    const personOnCell = this.gameState.field.find((item) => item.position === index);
 
-    // is any pers on index?
-    if (isPersOnCell) {
-      const pers = isPersOnCell.character;
-      const whoIsOnField = Object.getPrototypeOf(pers).constructor;
+    if (personOnCell) {
+      this.createAndShowTooltip(index, personOnCell);
+      const whoIsOnField = Object.getPrototypeOf(personOnCell.character).constructor;
+      const isGamer = this.GAMER_CLASSES.includes(whoIsOnField);
 
-      // if any --> show tooltip
-      const message = `🎖${pers.level} ⚔${pers.attack} 🛡${pers.defence} ❤${pers.health}`;
-      this.gamePlay.showCellTooltip(message, index);
-
-      // is it gamer or computer? if gamer --> can select
-      if (this.GAMER_CLASSES.includes(whoIsOnField)) {
-        this.gamePlay.setCursor('pointer');
+      // try to refactor here (mininize nestin of if-s)
+      if (isGamer) {
+        this.setAvaliableAction('select');
       } else {
-        // if computer --> by default not allowed
-        this.gamePlay.setCursor('not-allowed');
+        this.setAvaliableAction('not allowed to choose');
 
-        // if copmuter and your have selecetd pers and enough attackRange --> can fire
         if (this.gameState.selected) {
-          const { attackRange } = this.gameState.selected.character;
-          const { position } = this.gameState.selected;
-          if (getDistance(this.gamePlay.boardSize, position, index).distance <= attackRange) {
-            this.gamePlay.setCursor('crosshair');
-            this.gamePlay.selectCell(index, 'red');
+          this.setAvaliableAction('to far to attack');
+
+          if (this.isActionInRange('attackRange', index)) {
+            this.setAvaliableAction('attack', index);
           }
         }
       }
+      return;
+    }
 
-    // if no characters on index and you have selected pers and enough moveRange --> can go
-    } else if (this.gameState.selected) {
-      const { moveRange } = this.gameState.selected.character;
-      const { position } = this.gameState.selected;
-      if (getDistance(this.gamePlay.boardSize, position, index).distance <= moveRange) {
+    // if no person on target cell and you have not selected -- do nothing
+
+    // if no person on target cell and you have selected pers -- try to move
+    if (this.gameState.selected) {
+      if (this.isActionInRange('moveRange', index)) {
+        this.setAvaliableAction('move', index);
+      } else {
+        this.setAvaliableAction('to far to move');
+      }
+    }
+  }
+
+  isActionInRange(range, index) {
+    const actionRange = this.gameState.selected.character[range];
+    const { position } = this.gameState.selected;
+    return getDistance(this.gamePlay.boardSize, position, index).distance <= actionRange;
+  }
+
+  setAvaliableAction(status, index = null) {
+    this.gameState.avlAction = status;
+
+    switch (status) {
+      case 'select':
+        this.gamePlay.setCursor('pointer');
+        break;
+      case 'move':
         this.gamePlay.setCursor('pointer');
         this.gamePlay.selectCell(index, 'green');
-
-      // else not allowed
-      } else {
+        break;
+      case 'attack':
+        this.gamePlay.selectCell(index, 'red');
+        this.gamePlay.setCursor('crosshair');
+        break;
+      default:
         this.gamePlay.setCursor('not-allowed');
-      }
+        break;
     }
   }
 
   onCellLeave(index) {
     // Strange but hideCellTooltip work without onCellLeave
     this.gamePlay.setCursor('auto');
+    this.gameState.avlAction = null;
     this.gamePlay.deselectCell(index);
     if (this.gameState.selected) {
       this.gamePlay.selectCell(this.gameState.selected.position);
@@ -128,6 +141,7 @@ export default class GameController {
       this.gamePlay.deselectCell(this.gameState.selected.position);
     }
     this.gameState.selected = null;
+    this.gameState.avlAction = null;
 
     // create new start
     const gamerPositions = randomizeArray(getStartPosition(this.gamePlay.boardSize, 'gamer'));
@@ -142,5 +156,67 @@ export default class GameController {
     }
 
     this.gamePlay.redrawPositions(this.gameState.field);
+  }
+
+  actionMove(index) {
+    this.deselectBoth(index);
+    this.gameState.selected.position = index;
+    this.gamePlay.redrawPositions(this.gameState.field);
+    this.cleanAfterTurn();
+    // computers turn
+  }
+
+  actionAttack(index) {
+    const findedPers = this.gameState.field.find((item) => item.position === index);
+    const target = findedPers.character;
+    const attackerAttack = this.gameState.selected.character.attack;
+    const damage = Math.max(attackerAttack - target.defence, attackerAttack * 0.1);
+
+    // Attack visualisation here
+    this.gamePlay.showDamage(index, damage).finally(() => {
+      target.health -= damage;
+      if (target.health <= 0) {
+        const indexForDelete = this.gameState.field.indexOf(findedPers);
+        this.gameState.field.splice(indexForDelete, 1);
+      }
+
+      this.gamePlay.redrawPositions(this.gameState.field);
+      this.deselectBoth(index);
+      this.cleanAfterTurn();
+      // computer turn
+    });
+  }
+
+  actionSelect(index) {
+    const characterOnCell = this.gameState.field.find((item) => item.position === index);
+    const selectedPosition = this.gameState.selected ? this.gameState.selected.position : null;
+
+    if (selectedPosition === index) {
+      this.gamePlay.deselectCell(index);
+      this.gameState.selected = null;
+    } else if (selectedPosition === null) {
+      this.gamePlay.selectCell(index);
+      this.gameState.selected = characterOnCell;
+    } else {
+      this.gamePlay.deselectCell(selectedPosition);
+      this.gamePlay.selectCell(index);
+      this.gameState.selected = characterOnCell;
+    }
+  }
+
+  deselectBoth(index) {
+    this.gamePlay.deselectCell(this.gameState.selected.position);
+    this.gamePlay.deselectCell(index);
+  }
+
+  cleanAfterTurn() {
+    this.gameState.selected = null;
+    this.gameState.avlAction = null;
+  }
+
+  createAndShowTooltip(index, personOnCell) {
+    const pers = personOnCell.character;
+    const message = `🎖${pers.level} ⚔${pers.attack} 🛡${pers.defence} ❤${pers.health}`;
+    this.gamePlay.showCellTooltip(message, index);
   }
 }

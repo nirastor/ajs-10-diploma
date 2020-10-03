@@ -3,6 +3,7 @@ export default class GameState {
     this.field = [];
     this.activePlayer = '';
     this.selected = null;
+    this.avlAction = null;
   }
 
   changeActivePlayer() {
