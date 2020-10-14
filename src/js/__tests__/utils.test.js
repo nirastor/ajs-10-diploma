@@ -3,6 +3,8 @@ import {
   randomizeArray,
   getStartPosition,
   getDistance,
+  getPositionByCoordinates,
+  getCoordinatesByPosition,
 } from '../utils';
 
 /*
@@ -176,4 +178,24 @@ test.each([
   [8, 35, 40, 3],
 ])('should count correct distance', (fz, el1, el2, result) => {
   expect(getDistance(fz, el1, el2).distance).toBe(result);
+});
+
+test.each([
+  [1, 1, 8, 0],
+  [1, 8, 8, 7],
+  [8, 1, 8, 56],
+  [8, 8, 8, 63],
+  [1, 4, 8, 3],
+  [4, 5, 8, 28],
+  [6, 8, 8, 47],
+  [8, 2, 8, 57],
+])('should convert row, col and fieldSize to index', (row, col, fieldSize, result) => {
+  expect(getPositionByCoordinates(row, col, fieldSize)).toBe(result);
+});
+
+test.each([
+  [0, 8, [1, 1]],
+])('shuld convert index and fieldSize to row and col', (index, fieldSize, result) => {
+  expect(getCoordinatesByPosition(index, fieldSize)[0]).toBe(result[0]);
+  expect(getCoordinatesByPosition(index, fieldSize)[1]).toBe(result[1]);
 });

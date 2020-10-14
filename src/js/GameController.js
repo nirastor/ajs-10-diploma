@@ -5,8 +5,17 @@
 import { characterGenerator } from './generators';
 import GameState from './GameState';
 import GamePlay from './GamePlay';
+import Ai from './ai';
 import PositionedCharacter from './PositionedCharacter';
-import { randomizeArray, getStartPosition, getDistance } from './utils';
+
+import {
+  randomizeArray,
+  getStartPosition,
+  getDistance,
+  isGamer,
+  countDamage,
+} from './utils';
+
 import {
   Bowman,
   Swordsman,
@@ -23,6 +32,7 @@ export default class GameController {
     this.gameState = new GameState();
     this.GAMER_CLASSES = [Bowman, Swordsman, Magician];
     this.COMPUTER_CLASSES = [Vampire, Undead, Daemon];
+    this.ai = new Ai(this.GAMER_CLASSES, this.gameState, this.gamePlay.boardSize, this.gamePlay);
   }
 
   init() {
@@ -64,11 +74,11 @@ export default class GameController {
 
     if (personOnCell) {
       this.createAndShowTooltip(index, personOnCell);
-      const whoIsOnField = Object.getPrototypeOf(personOnCell.character).constructor;
-      const isGamer = this.GAMER_CLASSES.includes(whoIsOnField);
 
       // try to refactor here (mininize nestin of if-s)
-      if (isGamer) {
+      // const whoIsOnField = Object.getPrototypeOf(personOnCell.character).constructor;
+      // if (this.GAMER_CLASSES.includes(whoIsOnField)) {
+      if (isGamer(personOnCell, this.GAMER_CLASSES)) {
         this.setAvaliableAction('select');
       } else {
         this.setAvaliableAction('not allowed to choose');
@@ -163,14 +173,15 @@ export default class GameController {
     this.gameState.selected.position = index;
     this.gamePlay.redrawPositions(this.gameState.field);
     this.cleanAfterTurn();
+
     // computers turn
+    this.ai.makeTurn();
   }
 
   actionAttack(index) {
     const findedPers = this.gameState.field.find((item) => item.position === index);
     const target = findedPers.character;
-    const attackerAttack = this.gameState.selected.character.attack;
-    const damage = Math.max(attackerAttack - target.defence, attackerAttack * 0.1);
+    const damage = countDamage(this.gameState.selected, findedPers);
 
     // Attack visualisation here
     this.gamePlay.showDamage(index, damage).finally(() => {
@@ -183,7 +194,9 @@ export default class GameController {
       this.gamePlay.redrawPositions(this.gameState.field);
       this.deselectBoth(index);
       this.cleanAfterTurn();
-      // computer turn
+
+      // computers turn
+      this.ai.makeTurn();
     });
   }
 
@@ -209,6 +222,7 @@ export default class GameController {
     this.gamePlay.deselectCell(index);
   }
 
+  // Rename to cleanAfterPlayersTurn
   cleanAfterTurn() {
     this.gameState.selected = null;
     this.gameState.avlAction = null;
