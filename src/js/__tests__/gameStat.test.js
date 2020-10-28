@@ -13,9 +13,3 @@ test('should change player from computer to gamer', () => {
   recieved.changeActivePlayer();
   expect(recieved.activePlayer).toBe('gamer');
 });
-
-test('should change player from null to gamer', () => {
-  const recieved = new GameState();
-  recieved.changeActivePlayer();
-  expect(recieved.activePlayer).toBe('gamer');
-});

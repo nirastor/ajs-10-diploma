@@ -1,13 +1,11 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
-import {
-  Bowman,
-  Swordsman,
-  Magician,
-  Vampire,
-  Undead,
-  Daemon,
-} from './Character';
+import Bowman from './Characters/Bowman';
+import Swordsman from './Characters/Swordsman';
+import Magician from './Characters/Magician';
+import Vampire from './Characters/Vampire';
+import Undead from './Characters/Undead';
+import Daemon from './Characters/Daemon';
 
 /**
  * Generates random characters

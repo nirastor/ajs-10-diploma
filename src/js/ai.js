@@ -12,6 +12,7 @@ export default class Ai {
     this.gameState = gameState;
     this.gamePlay = gamePlay;
     this.fieldSize = fieldSize;
+    this.nextTurn = undefined;
     this.computerPerses = [];
     this.playerPerses = [];
     this.variants = [];
@@ -94,7 +95,8 @@ export default class Ai {
         this.gameState.field.splice(indexForDelete, 1);
       }
       this.gamePlay.redrawPositions(this.gameState.field);
-      // players turn
+
+      this.nextTurn.call(null);
     });
   }
 
@@ -105,7 +107,8 @@ export default class Ai {
     const active = this.gameState.field.find((item) => item === variant.active);
     active.position = this.allAvlCells[0].index;
     this.gamePlay.redrawPositions(this.gameState.field);
-    // players turn
+
+    this.nextTurn.call(null);
   }
 
   moveGetAvlPoints(variant) {

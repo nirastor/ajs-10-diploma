@@ -1,21 +1,19 @@
 import { characterGenerator, generateTeam } from '../generators';
-import {
-  Bowman,
-  Swordsman,
-  Magician,
-  Vampire,
-  Undead,
-  Daemon,
-} from '../Character';
+import Bowman from '../Characters/Bowman';
+import Swordsman from '../Characters/Swordsman';
+import Magician from '../Characters/Magician';
+import Vampire from '../Characters/Vampire';
+import Undead from '../Characters/Undead';
+import Daemon from '../Characters/Daemon';
 
 // In this test I have to change expect and recive, because couldnt find matcher like "toBeIn"
-test('should create right character for players characters set (WARN! recieved and expected reversed)', () => {
+test('should create right character for players characters set', () => {
   const received = characterGenerator([Bowman, Swordsman, Magician], 1);
   expect(['bowman', 'swordsman', 'magician']).toContain(received.type);
 });
 
 // In this test I have to change expect and recive, because couldnt find matcher like "toBeIn"
-test('should create right character for computers characters set  (WARN! recieved and expected reversed)', () => {
+test('should create right character for computers characters set', () => {
   const received = characterGenerator([Vampire, Undead, Daemon], 1);
   expect(['vampire', 'undead', 'daemon']).toContain(received.type);
 });

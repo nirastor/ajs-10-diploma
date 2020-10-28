@@ -13,6 +13,7 @@ export default class GamePlay {
     this.newGameListeners = [];
     this.saveGameListeners = [];
     this.loadGameListeners = [];
+    this.keyboardListeners = [];
   }
 
   bindToDOM(container) {
@@ -48,6 +49,8 @@ export default class GamePlay {
     this.newGameEl.addEventListener('click', (event) => this.onNewGameClick(event));
     this.saveGameEl.addEventListener('click', (event) => this.onSaveGameClick(event));
     this.loadGameEl.addEventListener('click', (event) => this.onLoadGameClick(event));
+
+    document.addEventListener('keydown', (event) => this.onKeyPress(event));
 
     this.boardEl = this.container.querySelector('[data-id=board]');
 
@@ -129,6 +132,15 @@ export default class GamePlay {
   }
 
   /**
+     * Add listener to "New Game" button click
+     *
+     * @param callback
+     */
+  addKeyboardListener(callback) {
+    this.keyboardListeners.push(callback);
+  }
+
+  /**
    * Add listener to "Save Game" button click
    *
    * @param callback
@@ -176,6 +188,10 @@ export default class GamePlay {
   onLoadGameClick(event) {
     event.preventDefault();
     this.loadGameListeners.forEach((o) => o.call(null));
+  }
+
+  onKeyPress(event) {
+    this.keyboardListeners.forEach((o) => o.call(null, event));
   }
 
   static showError(message) {
@@ -228,5 +244,11 @@ export default class GamePlay {
     if (this.container === null) {
       throw new Error('GamePlay not bind to DOM');
     }
+  }
+
+  clearCellListeners() {
+    this.cellClickListeners = [];
+    this.cellEnterListeners = [];
+    this.cellLeaveListeners = [];
   }
 }
