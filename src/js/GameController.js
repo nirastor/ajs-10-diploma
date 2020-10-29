@@ -8,6 +8,7 @@ import GameState from './GameState';
 import GamePlay from './GamePlay';
 import Ai from './ai';
 import PositionedCharacter from './PositionedCharacter';
+import GameStateService from './GameStateService';
 
 import {
   randomizeArray,
@@ -29,6 +30,7 @@ export default class GameController {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
     this.gameState = new GameState();
+    this.gameStateService = new GameStateService(window.localStorage);
     this.GAMER_CLASSES = [Bowman, Swordsman, Magician];
     this.COMPUTER_CLASSES = [Vampire, Undead, Daemon];
     this.ai = new Ai(this.GAMER_CLASSES, this.gameState, this.gamePlay.boardSize, this.gamePlay);
@@ -69,8 +71,11 @@ export default class GameController {
     // init event listeners to gamePlay events
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
-    this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+
+    this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
+    this.gamePlay.addSaveGameListener(this.onSaveClick.bind(this));
+    this.gamePlay.addLoadGameListener(this.onLoadClick.bind(this));
 
     this.gamePlay.addKeyboardListener(this.onKey.bind(this));
 
@@ -78,7 +83,29 @@ export default class GameController {
     this.ai.nextTurn = this.nextTurn.bind(this);
   }
 
+  onSaveClick() {
+    console.log('save');
+    console.log(this.gameState);
+    console.log(this.gameState.getState());
+    // this.gameStateService.save(this.gameState.getState());
+    this.gameStateService.save(this.gameState);
+  }
+
+  onLoadClick() {
+    console.log('load');
+    console.log(this.gameState);
+    console.log(this.gameStateService.load());
+    this.gameState.setState(this.gameStateService.load());
+    console.log(this.gameState);
+    this.gamePlay.drawUi(this.rules[this.gameState.level].theme);
+    this.gamePlay.redrawPositions(this.gameState.field);
+  }
+
   onCellClick(index) {
+    if (!this.gameState.gamePlay) {
+      return;
+    }
+
     if (this.gameState.activePlayer === 'computer') {
       return false;
     }
@@ -100,6 +127,10 @@ export default class GameController {
   }
 
   onCellEnter(index) {
+    if (!this.gameState.gamePlay) {
+      return;
+    }
+
     const personOnCell = this.gameState.field.find((item) => item.position === index);
 
     if (personOnCell) {
@@ -164,6 +195,10 @@ export default class GameController {
   }
 
   onCellLeave(index) {
+    if (!this.gameState.gamePlay) {
+      return;
+    }
+
     this.gamePlay.setCursor('auto');
     this.gameState.avlAction = null;
     this.gamePlay.deselectCell(index);
@@ -215,6 +250,7 @@ export default class GameController {
   onNewGameClick() {
     this.gameState.field = [];
     this.gameState.level = 0;
+    this.gameState.gamePlay = true;
     this.levelUp();
   }
 
@@ -286,6 +322,8 @@ export default class GameController {
       this.setHealthToOne(true);
     } else if (e.key === 'w') {
       this.setHealthToOne(false);
+    } else if (e.key === 'e') {
+      console.log(this.gameState);
     }
   }
 
@@ -324,13 +362,21 @@ export default class GameController {
         this.levelUp();
         setTimeout(alert('Победа на уровне! Продолжаем'), 0);
       } else {
+        this.gamePlay.setCursor('auto');
+        this.gameState.gamePlay = false;
+        this.saveScore();
         setTimeout(alert('Конец игры. Победа'), 0);
-        // Заблокировать возможность ходить
       }
       return true;
     }
 
     return false;
+  }
+
+  saveScore() {
+    const score = this.gameState.field.reduce((sum, item) => sum + item.character.health, 0);
+    this.gameState.maxScore = (score > this.gameState.maxScore) ? score : this.gameState.maxScore;
+    console.log(this.gameState.maxScore);
   }
 
   nextTurn() {
