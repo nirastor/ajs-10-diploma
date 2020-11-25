@@ -55,8 +55,8 @@ export default class Ai {
     });
   }
 
+  // serch target avl to attack with max damage without moving, if no target, then move
   selectAction() {
-    // serch target avl to attack with max damage without moving
     const toAttack = this.variants
       .slice()
       .filter((item) => item.attackAvl === true)
@@ -103,11 +103,9 @@ export default class Ai {
   doMove(variant) {
     this.moveGetAvlPoints(variant);
     this.allAvlCells.sort(Ai.sortVariants);
-    // no reassign args, but in this case may be possible?
     const active = this.gameState.field.find((item) => item === variant.active);
     active.position = this.allAvlCells[0].index;
     this.gamePlay.redrawPositions(this.gameState.field);
-
     this.nextTurn.call(null);
   }
 

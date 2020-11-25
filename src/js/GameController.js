@@ -1,8 +1,6 @@
 /* eslint-disable no-param-reassign */
-/* eslint-disable consistent-return */
-/* eslint-disable no-console */
-/* eslint-disable class-methods-use-this */
-/* eslint-disable no-unused-vars */
+/* eslint-disable no-alert */
+
 import { characterGenerator } from './generators';
 import GameState from './GameState';
 import GamePlay from './GamePlay';
@@ -66,8 +64,6 @@ export default class GameController {
     // draw field
     this.gamePlay.drawUi('prairie');
 
-    // TODO: load saved stated from stateService
-
     // init event listeners to gamePlay events
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
@@ -84,19 +80,11 @@ export default class GameController {
   }
 
   onSaveClick() {
-    console.log('save');
-    console.log(this.gameState);
-    console.log(this.gameState.getState());
-    // this.gameStateService.save(this.gameState.getState());
     this.gameStateService.save(this.gameState);
   }
 
   onLoadClick() {
-    console.log('load');
-    console.log(this.gameState);
-    console.log(this.gameStateService.load());
     this.gameState.setState(this.gameStateService.load());
-    console.log(this.gameState);
     this.gamePlay.drawUi(this.rules[this.gameState.level].theme);
     this.gamePlay.redrawPositions(this.gameState.field);
   }
@@ -107,10 +95,9 @@ export default class GameController {
     }
 
     if (this.gameState.activePlayer === 'computer') {
-      return false;
+      return;
     }
 
-    // try to refacor here to switch
     if (this.gameState.avlAction === 'select') {
       this.actionSelect(index);
     } else if (this.gameState.avlAction === 'move') {
@@ -136,9 +123,6 @@ export default class GameController {
     if (personOnCell) {
       this.createAndShowTooltip(index, personOnCell);
 
-      // try to refactor here (mininize nestin of if-s)
-      // const whoIsOnField = Object.getPrototypeOf(personOnCell.character).constructor;
-      // if (this.GAMER_CLASSES.includes(whoIsOnField)) {
       if (isGamer(personOnCell, this.GAMER_CLASSES)) {
         this.setAvaliableAction('select');
       } else {
@@ -156,8 +140,8 @@ export default class GameController {
     }
 
     // if no person on target cell and you have not selected -- do nothing
-
     // if no person on target cell and you have selected pers -- try to move
+
     if (this.gameState.selected) {
       if (this.isActionInRange('moveRange', index)) {
         this.setAvaliableAction('move', index);
@@ -304,7 +288,6 @@ export default class GameController {
     this.gamePlay.deselectCell(index);
   }
 
-  // Rename to cleanAfterPlayersTurn
   cleanAfterPlayersTurn() {
     this.gameState.selected = null;
     this.gameState.avlAction = null;
@@ -322,8 +305,6 @@ export default class GameController {
       this.setHealthToOne(true);
     } else if (e.key === 'w') {
       this.setHealthToOne(false);
-    } else if (e.key === 'e') {
-      console.log(this.gameState);
     }
   }
 
@@ -331,7 +312,6 @@ export default class GameController {
     const who = forGamer ? 'GAMER_CLASSES' : 'COMPUTER_CLASSES';
     this.gameState.field.forEach((pers) => {
       if (isGamer(pers, this[who])) {
-        // eslint-disable-next-line no-param-reassign
         pers.character.health = 1;
       }
     });
@@ -376,7 +356,6 @@ export default class GameController {
   saveScore() {
     const score = this.gameState.field.reduce((sum, item) => sum + item.character.health, 0);
     this.gameState.maxScore = (score > this.gameState.maxScore) ? score : this.gameState.maxScore;
-    console.log(this.gameState.maxScore);
   }
 
   nextTurn() {
